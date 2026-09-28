@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <title>Coverflow</title>
+    <link rel="stylesheet" href="./src/coverflow/coverflow.css" />
+    <script type="module" src="./src/app.js"></script>
+  </head>
+  <body>
+    <main class="player">
+      <div class="ambient" aria-hidden="true"></div>
+
+      <header class="toolbar glass">
+        <div class="toolbar__group toolbar__group--start">
+          <label class="volume">
+            <span class="visually-hidden">Volume</span>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 9v6h4l5 5V4L7 9H3Z" />
+              <path d="M16.5 12A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4Z" />
+              <path d="M14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6Z" />
+            </svg>
+            <input class="slider" type="range" min="0" max="100" value="70" data-control="volume" />
+          </label>
+        </div>
+
+        <div class="transport">
+          <div class="transport__buttons">
+            <button class="icon-button" type="button" aria-label="Previous track" data-control="previous">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M11 6v12l-8.5-6L11 6Zm10 0v12l-8.5-6L21 6Z" />
+              </svg>
+            </button>
+            <button class="icon-button icon-button--primary" type="button" aria-label="Play" data-control="play">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 4.5v15L19.5 12 7 4.5Z" />
+              </svg>
+            </button>
+            <button class="icon-button" type="button" aria-label="Next track" data-control="next">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 6v12l8.5-6L3 6Zm10 0v12l8.5-6L13 6Z" />
+              </svg>
+            </button>
+          </div>
+
+          <p class="transport__track" data-control="track">Not playing</p>
+
+          <label class="scrubber">
+            <span class="scrubber__time" data-control="elapsed">0:00</span>
+            <span class="visually-hidden">Playback position</span>
+            <input class="slider" type="range" min="0" max="30" step="0.1" value="0" disabled data-control="position" />
+            <span class="scrubber__time" data-control="remaining">-0:00</span>
+          </label>
+        </div>
+
+        <div class="toolbar__group toolbar__group--end">
+          <button class="pill-button" type="button" data-control="now-playing">Now Playing</button>
+
+          <form class="search" role="search">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="10.5" cy="10.5" r="6" />
+              <path d="m15 15 5 5" />
+            </svg>
+            <input type="search" name="term" placeholder="Search" aria-label="Search albums" autocomplete="off" />
+          </form>
+        </div>
+      </header>
+
+      <section class="coverflow" aria-roledescription="carousel" aria-label="Albums">
+        <ol class="coverflow__track"></ol>
+        <p class="coverflow__caption glass" aria-live="polite">
+          <span class="coverflow__artist"></span>
+          <span class="coverflow__album"></span>
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
