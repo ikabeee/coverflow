@@ -21,6 +21,7 @@ A school project that rebuilds the iOS-era Cover Flow album browser with today's
 - **Live search**: albums come straight from the iTunes Search API as you type.
 - **Preview playback**: play, pause, skip, seek and set the volume. Moving to another cover switches the music to that album, and when an album ends the flow moves on to the next one.
 - **System media controls**: keyboard media keys and the OS "now playing" widget show the track and artwork.
+- **Installable PWA that works offline**: install it like a native app. The interface, recent searches and covers you've already seen keep working without a connection.
 - **Accessible and responsive**: keyboard navigation, visible focus, support for reduced motion and reduced transparency, and a compact layout for phones.
 
 ## Getting started
@@ -45,6 +46,9 @@ npx serve .
 ```
 
 Open <http://localhost:8000> (or the URL `serve` prints). The app starts with a search for “Moving Mountains”.
+
+> [!IMPORTANT]
+> Service Workers only run on a secure origin: `https://`, or `localhost` during development. Opening the app from a LAN address such as `http://192.168.x.x` works, but it won't install and won't work offline. To publish it, use any HTTPS static host (GitHub Pages, Netlify, Vercel…). All paths are relative, so it also works from a subfolder.
 
 ### Controls
 
@@ -138,15 +142,88 @@ Everything is plain CSS, in [`src/coverflow/coverflow.css`](src/coverflow/coverf
 - **Reflections**: a flipped copy of each cover that fades out with a gradient mask.
 - **Accessibility**: `prefers-reduced-transparency` makes the glass opaque and `prefers-reduced-motion` turns off the animations.
 
+## Progressive Web App
+
+Coverflow follows the three building blocks of a PWA: a **Web App Manifest** so it can be installed, a **Service Worker** that works as a local proxy between the app and the network, and the **Cache API** so it works offline.
+
+```mermaid
+flowchart TD
+    UI[Coverflow UI] -->|fetch| SW[Service Worker<br/>sw.js]
+    SW -->|App Shell| SWR{{Stale-While-Revalidate}}
+    SW -->|iTunes Search API| NF{{Network First}}
+    SW -->|Artwork| CF{{Cache First}}
+    SW -.->|Audio previews| Net[(Network only)]
+    SWR <--> Shell[(coverflow-shell)]
+    NF <--> Api[(coverflow-api)]
+    CF <--> Art[(coverflow-artwork)]
+    SWR & NF & CF <-->|when online| Internet[(Internet)]
+```
+
+### Web App Manifest
+
+[`manifest.json`](manifest.json) tells the browser how the app should look once it's installed. `index.html` links it with `<link rel="manifest">`.
+
+| Property | Value | Purpose |
+| --- | --- | --- |
+| `name` / `short_name` | `Coverflow — Album browser` / `Coverflow` | Full name, and the short one used on the home screen. |
+| `start_url` | `./?source=pwa` | Page opened when the installed app starts. |
+| `scope` | `./` | URLs that belong to the app. |
+| `display` | `standalone` | Opens in its own window, without the browser's address bar or tabs. |
+| `orientation` | `any` | Works in portrait and landscape. |
+| `background_color` / `theme_color` | `#050505` | Splash screen and system bar colors, matching the dark interface. |
+| `icons` | 192 px, 512 px and 512 px `maskable` | Icons for the launcher, the splash screen and Android's adaptive shapes. |
+
+iOS doesn't read every manifest field, so `index.html` also includes `apple-touch-icon` and the `apple-mobile-web-app-*` meta tags. The icons live in [`icons/`](icons): the SVG files are the source, and the PNG files were exported from them.
+
+### Service Worker lifecycle
+
+[`sw.js`](sw.js) sits at the project root so its scope covers the whole app.
+
+1. **Registration**: `app.js` calls `navigator.serviceWorker.register('./sw.js')`.
+2. **Install**: the App Shell (HTML, CSS, JS modules, manifest and icons) is saved in the `coverflow-shell-v1` cache, so the next visit doesn't need the network.
+3. **Activate**: caches from older versions are deleted, and `clients.claim()` puts the worker in control of pages that are already open.
+4. **Fetch**: every request goes through the worker, which picks a strategy based on where it's going.
+
+### Caching strategies
+
+| Request | Strategy | Why |
+| --- | --- | --- |
+| App Shell (same origin) | **Stale-While-Revalidate** | Answers instantly from the cache, then updates the cache in the background for the next visit. |
+| `itunes.apple.com` (search and lookup) | **Network First** | Results should be fresh, but when offline the last saved copy of that same search is served. |
+| `*.mzstatic.com` (artwork) | **Cache First** | A cover never changes for a given URL, so once saved it doesn't need the network. |
+| Audio previews | Network only | The browser streams audio with range requests, so previews aren't cached. |
+
+The API and artwork caches keep only the newest entries (60 responses and 300 images), so they can't grow without limit. Covers load with `crossOrigin = "anonymous"` so the cache stores normal responses instead of opaque ones, which Chrome counts as several MB each against the storage quota.
+
+### Offline behavior
+
+| Action | Offline result |
+| --- | --- |
+| Open the app | Loads from the App Shell cache. |
+| Repeat a search you've done before | Shows the saved results and covers. |
+| New search | The caption says “You're offline”; the search runs again by itself when the connection returns. |
+| Play a preview | “Previews need a connection”. |
+
+The research this is based on also covers **IndexedDB** and **Background Sync**, which PWAs use to store data users create offline and send it later. Coverflow only reads data, so it has nothing to sync and doesn't use them.
+
+### Installing and debugging
+
+- **Install**: Chrome, Edge and Brave show an install icon in the address bar. On iOS, use Safari → Share → **Add to Home Screen**. On Android, use the browser menu → **Install app**.
+- **Inspect**: DevTools → **Application** shows the manifest, the Service Worker and each cache. Tick **Offline** in the Network tab to try offline mode, and run a **Lighthouse** audit to check the PWA setup.
+- **During development**: because the App Shell uses Stale-While-Revalidate, a code change shows up on the *second* reload. You can also enable **Update on reload** in Application → Service Workers. When you publish changes, bump `VERSION` in `sw.js` so the old caches get cleared.
+
 ## Project structure
 
 ```text
 coverflow/
 ├── index.html                  # Page markup: toolbar, flow and caption
+├── manifest.json               # Web App Manifest: name, icons, colors and display mode
+├── sw.js                       # Service Worker: App Shell precache and caching strategies
+├── icons/                      # App icons (SVG sources and exported PNG files)
 ├── docs/
 │   └── cover.png               # README screenshot
 └── src/
-    ├── app.js                  # Startup: search, debounce and wiring between modules
+    ├── app.js                  # Startup: search, debounce, wiring and Service Worker registration
     ├── albums/
     │   └── itunes.js           # iTunes Search API: searchAlbums() and fetchTracks()
     ├── coverflow/

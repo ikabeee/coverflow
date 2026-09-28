@@ -1,6 +1,3 @@
-// iTunes Search API: https://performance-partners.apple.com/search-api
-// The endpoints send CORS headers, so they can be called straight from the browser.
-
 const BASE_URL = 'https://itunes.apple.com';
 const ARTWORK_SIZE = 600;
 
@@ -11,7 +8,6 @@ export async function searchAlbums(term, { limit = 30, country = 'US', signal } 
     .map(toAlbum);
 }
 
-// The API only offers 30-second previews, not full songs.
 export async function fetchTracks(albumId, { country = 'US', signal } = {}) {
   const results = await request('/lookup', { id: albumId, entity: 'song', limit: 200, country }, signal);
   return results
@@ -35,7 +31,6 @@ function toAlbum(result) {
     id: result.collectionId,
     artist: result.artistName,
     title: result.collectionName,
-    // Apple only lists small thumbnails; the size segment of the URL can be swapped for a larger one.
     artwork: result.artworkUrl100.replace(/\/\d+x\d+bb\./, `/${ARTWORK_SIZE}x${ARTWORK_SIZE}bb.`),
     url: result.collectionViewUrl,
     year: result.releaseDate?.slice(0, 4),

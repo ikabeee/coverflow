@@ -1,6 +1,3 @@
-// Renders albums as a 3D Cover Flow. Geometry lives in CSS; this module only
-// assigns each cover its offset from the selected one.
-
 export function createCoverflow(root, { onChange, onSelect, onActivate } = {}) {
   const track = root.querySelector('.coverflow__track');
   const primary = root.querySelector('.coverflow__artist');
@@ -23,15 +20,12 @@ export function createCoverflow(root, { onChange, onSelect, onActivate } = {}) {
     render();
   }
 
-  // Shows a message in the caption instead of the covers (loading, empty, error).
   function setStatus(message) {
     root.dataset.state = 'status';
     primary.textContent = message;
     secondary.textContent = '';
   }
 
-  // Returns whether the selection moved. Unlike onChange, onSelect only fires
-  // for user navigation, not when a new result set is loaded.
   function select(index, { focus = false } = {}) {
     if (albums.length === 0) return false;
     const next = Math.max(0, Math.min(albums.length - 1, index));
@@ -45,7 +39,6 @@ export function createCoverflow(root, { onChange, onSelect, onActivate } = {}) {
     return true;
   }
 
-  // Selecting an already centered cover means "play this one".
   function activate() {
     if (albums.length) onActivate?.(albums[current]);
   }
@@ -115,6 +108,7 @@ function createArtwork(album) {
   art.className = 'cover__art';
 
   const image = document.createElement('img');
+  image.crossOrigin = 'anonymous';
   image.src = album.artwork;
   image.alt = '';
   image.decoding = 'async';

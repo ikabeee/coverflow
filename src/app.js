@@ -4,8 +4,6 @@ import { createPlayer } from './player/player.js';
 
 const DEFAULT_TERM = 'Moving Mountains';
 const SEARCH_DELAY = 400;
-// Wait for the flow to settle before switching albums, so browsing quickly
-// doesn't fire a track lookup per cover (the API allows ~20 calls a minute).
 const SWITCH_DELAY = 350;
 
 const player = document.querySelector('.player');
@@ -29,7 +27,6 @@ const coverflow = createCoverflow(document.querySelector('.coverflow'), {
 const audioPlayer = createPlayer(document.querySelector('.toolbar'), {
   getSelectedAlbum: coverflow.getSelected,
   onShowAlbum: (album) => coverflow.showAlbum(album.id),
-  // Keep playing through the results, like an album queue.
   onAlbumEnd() {
     if (coverflow.selectNext()) audioPlayer.playAlbum(coverflow.getSelected());
   },
@@ -37,22 +34,24 @@ const audioPlayer = createPlayer(document.querySelector('.toolbar'), {
 
 let controller;
 let debounce;
+let failedTerm = null;
 
 async function search(term) {
   term = term.trim() || DEFAULT_TERM;
 
-  // Only the latest search may update the covers.
   controller?.abort();
   controller = new AbortController();
 
   coverflow.setStatus('Loading…');
   try {
     const albums = await searchAlbums(term, { signal: controller.signal });
+    failedTerm = null;
     coverflow.setAlbums(albums);
   } catch (error) {
     if (error.name === 'AbortError') return;
     console.error(error);
-    coverflow.setStatus("Couldn't reach iTunes");
+    failedTerm = term;
+    coverflow.setStatus(navigator.onLine ? "Couldn't reach iTunes" : "You're offline");
   }
 }
 
@@ -66,5 +65,17 @@ searchInput.addEventListener('input', () => {
   clearTimeout(debounce);
   debounce = setTimeout(() => search(searchInput.value), SEARCH_DELAY);
 });
+
+window.addEventListener('online', () => {
+  if (failedTerm) search(failedTerm);
+});
+
+if ('serviceWorker' in navigator) {
+  try {
+    await navigator.serviceWorker.register('./sw.js');
+  } catch (error) {
+    console.error('Service Worker registration failed', error);
+  }
+}
 
 await search(DEFAULT_TERM);

@@ -43,7 +43,7 @@ export function createPlayer(root, { getSelectedAlbum, onShowAlbum, onAlbumEnd }
     } catch (error) {
       if (error.name === 'AbortError') return;
       console.error(error);
-      trackLabel.textContent = "Couldn't load tracks";
+      trackLabel.textContent = navigator.onLine ? "Couldn't load tracks" : "You're offline";
       return;
     } finally {
       if (loading === controller) {
@@ -144,6 +144,11 @@ export function createPlayer(root, { getSelectedAlbum, onShowAlbum, onAlbumEnd }
     renderTime();
   });
   audio.addEventListener('ended', next);
+  audio.addEventListener('error', () => {
+    if (!audio.getAttribute('src')) return;
+    trackLabel.textContent = navigator.onLine ? "Couldn't play this preview" : 'Previews need a connection';
+    renderPlayState();
+  });
 
   playButton.addEventListener('click', togglePlayback);
   control('previous').addEventListener('click', previous);

@@ -1,12 +1,9 @@
-/* ---------- Tokens ---------- */
-
 :root {
   --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
   --label: rgb(255 255 255 / 0.96);
   --label-secondary: rgb(255 255 255 / 0.6);
   --tint: #0a84ff;
 
-  /* Liquid Glass material */
   --glass-fill: rgb(255 255 255 / 0.08);
   --glass-blur: blur(28px) saturate(180%) brightness(1.05);
   --glass-edge: rgb(255 255 255 / 0.55);
@@ -17,7 +14,6 @@
   --radius-bar: 30px;
   --spring: cubic-bezier(0.32, 0.72, 0, 1);
 
-  /* Cover Flow geometry */
   --cover: clamp(170px, min(46vh, 40vw), 440px);
   --gap: calc(var(--cover) * 0.6);
   --step: calc(var(--cover) * 0.15);
@@ -67,8 +63,6 @@ input {
   flex: none;
 }
 
-/* ---------- Layout ---------- */
-
 .player {
   position: relative;
   isolation: isolate;
@@ -79,7 +73,6 @@ input {
     max(12px, env(safe-area-inset-left));
 }
 
-/* Heavily blurred copy of the selected cover, so the glass has something to refract. */
 .ambient {
   position: absolute;
   inset: 0;
@@ -104,8 +97,6 @@ input {
   background: radial-gradient(90% 70% at 50% 40%, transparent, rgb(0 0 0 / 0.75));
 }
 
-/* ---------- Liquid Glass ---------- */
-
 .glass {
   position: relative;
   background: var(--glass-fill);
@@ -117,7 +108,6 @@ input {
     var(--glass-shadow);
 }
 
-/* Specular rim: brighter where light hits the top-left and bottom-right edges. */
 .glass::before {
   content: '';
   position: absolute;
@@ -141,8 +131,6 @@ input {
   mask-composite: exclude;
   pointer-events: none;
 }
-
-/* ---------- Toolbar ---------- */
 
 .toolbar {
   z-index: 2;
@@ -313,8 +301,6 @@ input {
   outline-offset: 2px;
 }
 
-/* ---------- Sliders ---------- */
-
 .slider {
   --fill: 50%;
   flex: 1;
@@ -345,7 +331,6 @@ input {
   background: var(--label);
 }
 
-/* Capsule knob that swells into a glass lens while dragging. */
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 26px;
@@ -400,8 +385,6 @@ input {
   outline-offset: 2px;
 }
 
-/* ---------- Cover Flow ---------- */
-
 .coverflow {
   position: relative;
   flex: 1;
@@ -412,7 +395,6 @@ input {
   perspective-origin: 50% 40%;
   outline: none;
   overflow: hidden;
-  /* Fade the far covers into the edges. */
   -webkit-mask: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
   mask: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
 }
@@ -427,7 +409,6 @@ input {
   transform-style: preserve-3d;
 }
 
-/* --side is -1, 0 or 1 and --distance the absolute offset from the selected cover. */
 .coverflow__item {
   --side: 0;
   --distance: 0;
@@ -455,7 +436,6 @@ input {
   cursor: pointer;
 }
 
-/* The gradient shows while the image loads or if it fails. */
 .cover__art {
   position: absolute;
   inset: 0;
@@ -471,7 +451,6 @@ input {
   object-fit: cover;
 }
 
-/* Dim side covers slightly, as in the original. */
 .cover__art::after {
   content: '';
   position: absolute;
@@ -522,8 +501,6 @@ input {
   display: none;
 }
 
-/* ---------- Responsive ---------- */
-
 @media (max-width: 760px) {
   :root {
     --cover: clamp(150px, 52vw, 300px);
@@ -566,8 +543,6 @@ input {
     max-width: 220px;
   }
 }
-
-/* ---------- Accessibility ---------- */
 
 @media (prefers-reduced-transparency: reduce) {
   .glass {
