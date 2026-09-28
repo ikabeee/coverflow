@@ -1,4 +1,4 @@
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL_CACHE = `coverflow-shell-${VERSION}`;
 const API_CACHE = `coverflow-api-${VERSION}`;
 const ARTWORK_CACHE = `coverflow-artwork-${VERSION}`;
@@ -15,6 +15,7 @@ const APP_SHELL = [
   './src/albums/itunes.js',
   './src/coverflow/coverflow.js',
   './src/coverflow/coverflow.css',
+  './src/coverflow/palette.js',
   './src/player/player.js',
   './icons/icon.svg',
   './icons/icon-192.png',

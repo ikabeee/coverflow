@@ -1,5 +1,8 @@
+const EAGER_RANGE = 3;
+
 export function createCoverflow(root, { onChange, onSelect, onActivate } = {}) {
   const track = root.querySelector('.coverflow__track');
+  const caption = root.querySelector('.coverflow__caption');
   const primary = root.querySelector('.coverflow__artist');
   const secondary = root.querySelector('.coverflow__album');
   let albums = [];
@@ -9,7 +12,10 @@ export function createCoverflow(root, { onChange, onSelect, onActivate } = {}) {
   function setAlbums(next) {
     albums = next;
     current = Math.floor(albums.length / 2);
-    items = albums.map((album, index) => createItem(album, () => (index === current ? activate() : select(index))));
+    items = albums.map((album, index) => {
+      const eager = Math.abs(index - current) <= EAGER_RANGE;
+      return createItem(album, () => (index === current ? activate() : select(index)), eager);
+    });
     track.replaceChildren(...items);
 
     if (albums.length === 0) {
@@ -62,6 +68,9 @@ export function createCoverflow(root, { onChange, onSelect, onActivate } = {}) {
     const album = albums[current];
     primary.textContent = album.artist;
     secondary.textContent = album.title;
+    caption.classList.remove('coverflow__caption--pulse');
+    void caption.offsetWidth;
+    caption.classList.add('coverflow__caption--pulse');
     onChange?.(album, current);
   }
 
@@ -83,7 +92,7 @@ export function createCoverflow(root, { onChange, onSelect, onActivate } = {}) {
   };
 }
 
-function createItem(album, onSelect) {
+function createItem(album, onSelect, eager) {
   const item = document.createElement('li');
   item.className = 'coverflow__item';
 
@@ -94,16 +103,16 @@ function createItem(album, onSelect) {
   cover.setAttribute('aria-label', `${album.title} by ${album.artist}`);
   cover.addEventListener('click', onSelect);
 
-  const reflection = createArtwork(album);
+  const reflection = createArtwork(album, eager);
   reflection.classList.add('cover__reflection');
   reflection.setAttribute('aria-hidden', 'true');
 
-  cover.append(createArtwork(album), reflection);
+  cover.append(createArtwork(album, eager), reflection);
   item.append(cover);
   return item;
 }
 
-function createArtwork(album) {
+function createArtwork(album, eager) {
   const art = document.createElement('div');
   art.className = 'cover__art';
 
@@ -112,6 +121,7 @@ function createArtwork(album) {
   image.src = album.artwork;
   image.alt = '';
   image.decoding = 'async';
+  image.loading = eager ? 'eager' : 'lazy';
   image.draggable = false;
   image.addEventListener('error', () => image.remove(), { once: true });
 

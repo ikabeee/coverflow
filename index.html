@@ -9,11 +9,16 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Coverflow" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://*.mzstatic.com; media-src https://*.itunes.apple.com; connect-src 'self' https://itunes.apple.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';"
+    />
     <title>Coverflow</title>
     <link rel="manifest" href="./manifest.json" />
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
     <link rel="stylesheet" href="./src/coverflow/coverflow.css" />
+    <link rel="preconnect" href="https://itunes.apple.com" crossorigin />
     <script type="module" src="./src/app.js"></script>
   </head>
   <body>
@@ -57,7 +62,7 @@
           <label class="scrubber">
             <span class="scrubber__time" data-control="elapsed">0:00</span>
             <span class="visually-hidden">Playback position</span>
-            <input class="slider" type="range" min="0" max="30" step="0.1" value="0" disabled data-control="position" />
+            <input class="slider slider--accent" type="range" min="0" max="30" step="0.1" value="0" disabled data-control="position" />
             <span class="scrubber__time" data-control="remaining">-0:00</span>
           </label>
         </div>

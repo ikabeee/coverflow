@@ -39,11 +39,16 @@ export function createPlayer(root, { getSelectedAlbum, onShowAlbum, onAlbumEnd }
     renderPlayState();
 
     try {
-      tracks = await fetchTracks(next.id, { signal: controller.signal });
+      tracks = await fetchTracks(next.id, { country: next.country, signal: controller.signal });
     } catch (error) {
       if (error.name === 'AbortError') return;
       console.error(error);
-      trackLabel.textContent = navigator.onLine ? "Couldn't load tracks" : "You're offline";
+      trackLabel.textContent =
+        error.name === 'RateLimitError'
+          ? 'Too many requests — try again soon'
+          : navigator.onLine
+            ? "Couldn't load tracks"
+            : "You're offline";
       return;
     } finally {
       if (loading === controller) {
