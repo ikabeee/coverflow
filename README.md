@@ -85,6 +85,7 @@ All API access lives in [`src/albums/itunes.js`](src/albums/itunes.js). The API 
 
 ```http
 GET https://itunes.apple.com/search?term=death+cab+for+cutie&media=music&entity=album&limit=30&country=US
+GET https://itunes.apple.com/search?term=death+cab+for+cutie&media=music&entity=album&limit=30&country=MX
 ```
 
 | Parameter | Value | Why |
@@ -93,13 +94,16 @@ GET https://itunes.apple.com/search?term=death+cab+for+cutie&media=music&entity=
 | `media` | `music` | Leaves out movies, podcasts, apps and books. |
 | `entity` | `album` | Returns albums (`collection`) instead of songs. |
 | `limit` | `30` | Enough covers to fill the flow. |
-| `country` | `US` | The store to search. |
+| `country` | `US`, `MX` | Both storefronts are searched in parallel and merged (deduped by artist + title) for broader catalog coverage. |
+
+Each result keeps the storefront it came from, so its tracks are looked up from the same store later.
 
 Each result is turned into the small object the UI works with:
 
 ```js
 {
   id: result.collectionId,        // used later to look up the tracks
+  country,                        // which storefront this came from
   artist: result.artistName,
   title: result.collectionName,
   artwork: result.artworkUrl100,  // upscaled, see below
@@ -111,13 +115,13 @@ Each result is turned into the small object the UI works with:
 > [!TIP]
 > The API only returns 100×100 thumbnails (`…/100x100bb.jpg`). Apple's image server makes other sizes from that same URL, so the app swaps the size part for `600x600bb` to get sharp covers.
 
-**2. Looking up an album's tracks**: `fetchTracks(albumId)`
+**2. Looking up an album's tracks**: `fetchTracks(albumId, { country })`
 
 ```http
 GET https://itunes.apple.com/lookup?id=966379289&entity=song&limit=200&country=US
 ```
 
-The first result is the album itself, followed by its songs. The app keeps only the songs that have a `previewUrl`, sorts them by `discNumber` and `trackNumber`, and plays those preview files.
+The first result is the album itself, followed by its songs. The app keeps only the songs that have a `previewUrl`, sorts them by `discNumber` and `trackNumber`, and plays those preview files. The lookup uses the same storefront (`country`) the album was found in, since a collection ID only resolves in its own store.
 
 **3. Being a good API citizen**
 

@@ -1,6 +1,7 @@
 import { searchAlbums } from './albums/itunes.js';
 import { createCoverflow } from './coverflow/coverflow.js';
 import { createPlayer } from './player/player.js';
+import { extractAccentColor } from './coverflow/palette.js';
 
 const DEFAULT_TERM = 'Moving Mountains';
 const SEARCH_DELAY = 400;
@@ -11,9 +12,22 @@ let switchTimer;
 const searchForm = document.querySelector('.search');
 const searchInput = searchForm.elements.term;
 
+let accentToken = 0;
+async function applyAccentColor(artwork) {
+  const token = ++accentToken;
+  try {
+    const color = await extractAccentColor(artwork);
+    if (token === accentToken) player.style.setProperty('--tint', color);
+  } catch (error) {
+    console.error(error);
+    if (token === accentToken) player.style.removeProperty('--tint');
+  }
+}
+
 const coverflow = createCoverflow(document.querySelector('.coverflow'), {
   onChange(album) {
     player.style.setProperty('--ambient-image', `url("${album.artwork}")`);
+    applyAccentColor(album.artwork);
   },
   onSelect(album) {
     clearTimeout(switchTimer);
@@ -51,7 +65,13 @@ async function search(term) {
     if (error.name === 'AbortError') return;
     console.error(error);
     failedTerm = term;
-    coverflow.setStatus(navigator.onLine ? "Couldn't reach iTunes" : "You're offline");
+    coverflow.setStatus(
+      error.name === 'RateLimitError'
+        ? 'Too many requests — try again in a minute'
+        : navigator.onLine
+          ? "Couldn't reach iTunes"
+          : "You're offline",
+    );
   }
 }
 
